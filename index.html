@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PakWheels - Buy & Sell Cars, Bikes, Auto Parts & Accessories in Pakistan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Roboto', sans-serif; }
+    .bg-hero { background-image: url('https://via.placeholder.com/1920x600?text=Hero+Banner'); background-size: cover; background-position: center; }
+    .search-tabs { background: linear-gradient(to bottom, #003087, #0052cc); }
+    .search-tabs button.active { background: #ffffff; color: #003087; }
+    .car-card:hover { transform: translateY(-5px); transition: transform 0.3s; }
+    .cart-toast { transform: translateY(-100%); transition: transform 0.3s ease-in-out; }
+    .cart-toast.show { transform: translateY(0); }
+  </style>
+</head>
+<body class="text-gray-800">
+  <!-- Toast Notification -->
+  <div id="cart-toast" class="cart-toast fixed top-0 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-b-lg shadow-lg z-50">
+    Item added to cart!
+  </div>
+
+  <!-- Top Bar -->
+  <div class="bg-blue-900 text-white text-sm py-2">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <div class="flex space-x-4">
+        <a href="#" class="hover:text-blue-300">Download App</a>
+        <a href="#" class="hover:text-blue-300">Sell Your Car</a>
+      </div>
+      <div class="flex space-x-4 items-center">
+        <a href="#" class="hover:text-blue-300">Sign In</a>
+        <a href="#" class="hover:text-blue-300">Register</a>
+        <button id="cart-btn" class="relative hover:text-blue-300">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <img src="pw-logo-new-1.png" alt="PakWheels Logo" class="h-9">
+        <nav class="hidden md:flex space-x-6 text-sm font-medium">
+          <a href="#" class="hover:text-blue-600">Used Cars</a>
+          <a href="#" class="hover:text-blue-600">New Cars</a>
+          <a href="#" class="hover:text-blue-600">Bikes</a>
+          <a href="#" class="hover:text-blue-600">Auto Parts & Accessories</a>
+          <a href="#" class="hover:text-blue-600">Cool Rides</a>
+          <a href="#" class="hover:text-blue-600">Forums</a>
+          <a href="#" class="hover:text-blue-600">Blog</a>
+          <a href="#" class="hover:text-blue-600">Autostore</a>
+        </nav>
+      </div>
+      <button id="mobile-menu-btn" class="md:hidden text-blue-900" aria-label="Toggle mobile menu">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white shadow">
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Used Cars</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">New Cars</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Bikes</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Auto Parts & Accessories</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Cool Rides</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Forums</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Blog</a>
+      <a href="#" class="block px-4 py-3 hover:bg-gray-100">Autostore</a>
+    </div>
+  </header>
+
+  <!-- Cart Modal -->
+  <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 max-w-lg w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Your Cart</h2>
+        <button id="close-cart" class="text-gray-600 hover:text-gray-800">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="cart-items" class="max-h-64 overflow-y-auto"></div>
+      <div class="mt-4 flex justify-between items-center">
+        <p class="font-bold">Total: <span id="cart-total">PKR 0</span></p>
+        <button id="checkout-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="bg-hero py-16">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="search-tabs flex text-white">
+          <button class="flex-1 py-3 text-center font-semibold active" data-tab="used-cars">Used Cars</button>
+          <button class="flex-1 py-3 text-center font-semibold" data-tab="new-cars">New Cars</button>
+          <button class="flex-1 py-3 text-center font-semibold" data-tab="bikes">Bikes</button>
+        </div>
+        <form class="p-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+          <select class="border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-600" aria-label="Select City">
+            <option>Select City</option>
+            <option>Lahore</option>
+            <option>Karachi</option>
+            <option>Islamabad</option>
+          </select>
+          <select class="border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-600" aria-label="Select Make">
+            <option>Select Make</option>
+            <option>Toyota</option>
+            <option>Honda</option>
+            <option>Suzuki</option>
+          </select>
+          <select class="border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-600" aria-label="Select Model">
+            <option>Select Model</option>
+            <option>Corolla</option>
+            <option>Civic</option>
+            <option>Mehran</option>
+          </select>
+          <input type="text" placeholder="Price Range (PKR)" class="border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-600" aria-label="Price Range">
+          <button type="submit" class="bg-blue-600 text-white p-3 rounded hover:bg-blue-700">Find Cars</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Listings -->
+  <section class="container mx-auto px-4 py-12">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">Featured Used Cars For Sale</h2>
+      <a href="#" class="text-blue-600 hover:underline">View All</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="car-card border rounded-lg overflow-hidden shadow-lg">
+        <img src="Slide_hyundai-elantra-gls-9-2021-120072190.webp" alt="Hyundai Elantra 2021" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">Hyundai Elantra 2021</h3>
+          <p class="text-blue-600 font-bold">PKR 5,700,000</p>
+          <p class="text-sm text-gray-500">Lahore | 2021 | 25,000 km</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Hyundai Elantra 2021" data-price="5700000">Add to Cart</button>
+        </div>
+      </div>
+      <div class="car-card border rounded-lg overflow-hidden shadow-lg">
+        <img src="Slide_honda-n-wgn-custom-g-l-package-2019-121116899.webp" alt="Honda N Wgn 2019" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">Honda N Wgn 2019</h3>
+          <p class="text-blue-600 font-bold">PKR 3,235,000</p>
+          <p class="text-sm text-gray-500">Lahore | 2020 | 30,000 km</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Honda N Wgn 2019" data-price="3235000">Add to Cart</button>
+        </div>
+      </div>
+      <div class="car-card border rounded-lg overflow-hidden shadow-lg">
+        <img src="Slide_nissan-sakura-g-64-2022-121155783.webp" alt="Toyota Prado 2002" class="w-full">
+        <div class="p-5">
+          <h3 class="font-semibold text-lg">Nissan Sakura 2022</h3>
+          <p class="text-blue-600 font-bold">PKR 5,700,000</p>
+          <p class="text-sm text-gray-500">Peshawar | 2002 | 15,000 km</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Toyota Prado 2002" data-price="3680000">Add to Cart</button>
+        </div>
+      </div>
+      <div class="car-card border rounded-lg overflow-hidden shadow-lg">
+        <img src="Slide_kia-sportage-alpha-2-2021-120242945.webp" alt="KIA Sportage 2021" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">KIA Sportage 2021</h3>
+          <p class="text-blue-600 font-bold">PKR 6,300,000</p>
+          <p class="text-sm text-gray-500">Lahore | 2021 | 20,000 km</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="KIA Sportage 2021" data-price="6300000">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- New Cars Section -->
+  <section class="bg-gray-100 py-12">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Explore New Cars</h2>
+        <a href="#" class="text-blue-600 hover:underline">View All</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="Corolla-X-Cars-Cropped-Pictures-for-Website (1).jpg" alt="Toyota Corolla" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">Toyota Corolla</h3>
+            <p class="text-blue-600 font-bold">PKR 5,970,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Toyota Corolla" data-price="5970000">Add to Cart</button>
+          </div>
+        </div>
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="Suzuki Alto (2).jpg" alt="Suzuki Alto" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">Suzuki Alto</h3>
+            <p class="text-blue-600 font-bold">PKR 2,330,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Suzuki Alto" data-price="2330000">Add to Cart</button>
+          </div>
+        </div>
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="Slide_kia-sorento-3-5-fwd-2022-117318124 (1).webp" alt="KIA Sorento 2022" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">KIA Sorento 2022</h3>
+            <p class="text-blue-600 font-bold">PKR 8,400,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="KIA Sorento 2022" data-price="8400000">Add to Cart</button>
+          </div>
+        </div>
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="Honda City (2).jpg" alt="Honda City" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">Honda City</h3>
+            <p class="text-blue-600 font-bold">PKR 4,650,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Honda City" data-price="4650000">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bikes Section -->
+  <section class="container mx-auto px-4 py-12">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">New Bikes</h2>
+      <a href="#" class="text-blue-600 hover:underline">View All</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="border rounded-lg overflow-hidden shadow-lg">
+        <img src="Honda CD70(4).jpg" alt="Honda CD 70" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">Honda CD 70</h3>
+          <p class="text-blue-600 font-bold">PKR 157,900</p>
+          <p class="text-sm text-gray-500">Lahore | 2023</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Honda CD 70" data-price="157900">Add to Cart</button>
+        </div>
+      </div>
+      <div class="border rounded-lg overflow-hidden shadow-lg">
+        <img src="Honda CG 125(4).jpg" alt="Honda CG 125" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">Honda CG 125</h3>
+          <p class="text-blue-600 font-bold">PKR 234,900</p>
+          <p class="text-sm text-gray-500">Lahore | 2022</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Honda CG 125" data-price="234900">Add to Cart</button>
+        </div>
+      </div>
+      <div class="border rounded-lg overflow-hidden shadow-lg">
+        <img src="Honda CG 150 (4).jpg" alt="Suzuki GS 150" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">Suzuki GS 150</h3>
+          <p class="text-blue-600 font-bold">PKR 389,000</p>
+          <p class="text-sm text-gray-500">Islamabad | 2021</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Suzuki GS 150" data-price="389000">Add to Cart</button>
+        </div>
+      </div>
+      <div class="border rounded-lg overflow-hidden shadow-lg">
+        <img src="YAMAHA YBR (4).jpg" alt="Yamaha YBR 125" class="w-full">
+        <div class="p-4">
+          <h3 class="font-semibold text-lg">Yamaha YBR 125</h3>
+          <p class="text-blue-600 font-bold">PKR 466,000</p>
+          <p class="text-sm text-gray-500">Lahore | 2023</p>
+          <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Yamaha YBR 125" data-price="466000">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Auto Parts & Accessories -->
+  <section class="bg-gray-100 py-12">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Auto Parts & Accessories</h2>
+        <a href="#" class="text-blue-600 hover:underline">View All</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="batteries-0a698331b93f59e8720442ecf0a86b7b.png" alt="Car Battery" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">Car Battery</h3>
+            <p class="text-blue-600 font-bold">PKR 25,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Car Battery" data-price="25000">Add to Cart</button>
+          </div>
+        </div>
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="alloy-wheels-b69771aeef0ed4632ffb09a774ed6dc2.png" alt="Alloy Rims" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">Alloy Rims</h3>
+            <p class="text-blue-600 font-bold">PKR 50,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Alloy Rims" data-price="50000">Add to Cart</button>
+          </div>
+        </div>
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="usb-car-charger-79e64d90c9ee21e29c264a5377fc733b.png" alt="Car Charger" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">Car Charger</h3>
+            <p class="text-blue-600 font-bold">PKR 4,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Car Charger" data-price="4000">Add to Cart</button>
+          </div>
+        </div>
+        <div class="border rounded-lg overflow-hidden shadow-lg">
+          <img src="gps-trackers-81726947c4613c5e32cba836b2633a85.png" alt="Car Engine" class="w-full">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg">GPS Tracker</h3>
+            <p class="text-blue-600 font-bold">PKR 80,000</p>
+            <button class="add-to-cart mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full" data-name="Car Engine" data-price="700000">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-blue-900 text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+        <div>
+          <h4 class="font-bold text-lg mb-4">PakWheels.com</h4>
+          <ul class="text-sm space-y-2">
+            <li><a href="#" class="hover:text-blue-300">About Us</a></li>
+            <li><a href="#" class="hover:text-blue-300">Contact Us</a></li>
+            <li><a href="#" class="hover:text-blue-300">Advertise With Us</a></li>
+            <li><a href="#" class="hover:text-blue-300">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-lg mb-4">Buy Vehicle</h4>
+          <ul class="text-sm space-y-2">
+            <li><a href="#" class="hover:text-blue-300">Used Cars</a></li>
+            <li><a href="#" class="hover:text-blue-300">New Cars</a></li>
+            <li><a href="#" class="hover:text-blue-300">Bikes</a></li>
+            <li><a href="#" class="hover:text-blue-300">Auto Parts & Accessories</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-lg mb-4">Sell Vehicle</h4>
+          <ul class="text-sm space-y-2">
+            <li><a href="#" class="hover:text-blue-300">Sell Your Car</a></li>
+            <li><a href="#" class="hover:text-blue-300">Sell Your Bike</a></li>
+            <li><a href="#" class="hover:text-blue-300">Post an Ad</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-lg mb-4">Community</h4>
+          <ul class="text-sm space-y-2">
+            <li><a href="#" class="hover:text-blue-300">Forums</a></li>
+            <li><a href="#" class="hover:text-blue-300">Blog</a></li>
+            <li><a href="#" class="hover:text-blue-300">Cool Rides</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-lg mb-4">Connect With Us</h4>
+          <div class="flex space-x-4 mb-4">
+            <a href="#" class="hover:text-blue-300" aria-label="Facebook"><i class="fab fa-facebook-f text-xl"></i></a>
+            <a href="#" class="hover:text-blue-300" aria-label="Twitter"><i class="fab fa-twitter text-xl"></i></a>
+            <a href="#" class="hover:text-blue-300" aria-label="Instagram"><i class="fab fa-instagram text-xl"></i></a>
+            <a href="#" class="hover:text-blue-300" aria-label="YouTube"><i class="fab fa-youtube text-xl"></i></a>
+          </div>
+          <p class="text-sm">Download our app:</p>
+          <div class="flex space-x-2">
+            <img src="app-store-badge-47a3fa71b3442ad5181388d9060d4478.svg" alt="App Store" class="h-10">
+            <img src="google-play-badge-fe1c02f5d509b88ec786cc1893f68200 (1).svg" alt="Google Play" class="h-10">
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
+        <p>© 2003 - 2025 PakWheels.com. All Rights Reserved.</p>
+        <p class="mt-2">
+          <a href="#" class="hover:text-blue-300">Terms of Service</a> | 
+          <a href="#" class="hover:text-blue-300">Privacy Policy</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    class CartManager {
+      constructor() {
+        this.cart = JSON.parse(localStorage.getItem('cart')) || [];
+        this.cartModal = document.getElementById('cart-modal');
+        this.cartItemsContainer = document.getElementById('cart-items');
+        this.cartTotal = document.getElementById('cart-total');
+        this.cartCount = document.getElementById('cart-count');
+        this.cartToast = document.getElementById('cart-toast');
+        this.initEventListeners();
+        this.updateCartDisplay();
+      }
+
+      initEventListeners() {
+        // Mobile Menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+          document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Search Tabs
+        document.querySelectorAll('.search-tabs button').forEach(button => {
+          button.addEventListener('click', () => {
+            document.querySelectorAll('.search-tabs button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+          });
+        });
+
+        // Cart Button
+        document.getElementById('cart-btn').addEventListener('click', () => this.toggleCartModal());
+
+        // Close Cart
+        document.getElementById('close-cart').addEventListener('click', () => this.toggleCartModal());
+
+        // Add to Cart
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+          button.addEventListener('click', () => {
+            const name = button.dataset.name;
+            const price = parseInt(button.dataset.price);
+            this.addToCart({ name, price, id: Date.now() });
+          });
+        });
+
+        // Checkout (placeholder)
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+          alert('Proceeding to checkout...');
+        });
+      }
+
+      addToCart(item) {
+        this.cart.push(item);
+        localStorage.setItem('cart', JSON.stringify(this.cart));
+        this.updateCartDisplay();
+        this.showToast();
+      }
+
+      removeFromCart(id) {
+        this.cart = this.cart.filter(item => item.id !== id);
+        localStorage.setItem('cart', JSON.stringify(this.cart));
+        this.updateCartDisplay();
+      }
+
+      updateCartDisplay() {
+        this.cartCount.textContent = this.cart.length;
+        this.cartItemsContainer.innerHTML = '';
+        let total = 0;
+
+        if (this.cart.length === 0) {
+          this.cartItemsContainer.innerHTML = '<p class="text-gray-500">Your cart is empty</p>';
+        } else {
+          this.cart.forEach(item => {
+            total += item.price;
+            const itemElement = document.createElement('div');
+            itemElement.className = 'flex justify-between items-center py-2 border-b';
+            itemElement.innerHTML = `
+              <div>
+                <p class="font-semibold">${item.name}</p>
+                <p class="text-blue-600">PKR ${item.price.toLocaleString()}</p>
+              </div>
+              <button class="remove-item text-red-500 hover:text-red-700" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+              </button>
+            `;
+            this.cartItemsContainer.appendChild(itemElement);
+          });
+        }
+
+        this.cartTotal.textContent = `PKR ${total.toLocaleString()}`;
+        
+        // Add remove item listeners
+        document.querySelectorAll('.remove-item').forEach(button => {
+          button.addEventListener('click', () => {
+            this.removeFromCart(parseInt(button.dataset.id));
+          });
+        });
+      }
+
+      showToast() {
+        this.cartToast.classList.add('show');
+        setTimeout(() => {
+          this.cartToast.classList.remove('show');
+        }, 2000);
+      }
+
+      toggleCartModal() {
+        this.cartModal.classList.toggle('hidden');
+      }
+    }
+
+    // Initialize Cart Manager
+    new CartManager();
+  </script>
+</body>
+</html>
